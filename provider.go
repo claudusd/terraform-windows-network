@@ -50,16 +50,12 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		HTTPS:    true,
 		Insecure: true,
 	}
-	params := winrm.DefaultParameters
-	client, err := winrm.NewClientWithParameters(endpoint, d.Get("username").(string), d.Get("password").(string), params)
-	if err != nil {
-	}
-	shell, err := client.CreateShell()
-	if err != nil {
-		// error here if cannot connect
-		return nil, err
+
+	communicator := &Communicator{
+		username: d.Get("username").(string),
+		password: d.Get("password").(string),
+		endpoint: endpoint,
 	}
 
-	shell.Close()
-	return nil, nil
+	return communicator, nil
 }
