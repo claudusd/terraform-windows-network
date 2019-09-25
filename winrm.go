@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"regexp"
 	"strings"
 
@@ -84,6 +85,35 @@ func (c *Communicator) GetAllAllowedMacAddress() []string {
 		}
 	}
 	return macs
+}
+
+func (c *Communicator) AddBail(mac string, ip net.IP, scope net.IP, description string) error {
+
+	command := fmt.Sprintf(
+		"Add-DhcpServerv4Reservation -ScopeId %s -Description \"%s\" -IPAddress %s -Name %s -ClientId %s -Type Dhcp",
+		scope.String(), "Toto bail", ip.String(), "terraform-bail", mac,
+	)
+
+	_, stderr, returnCode := c.Execute(command)
+
+	if returnCode != 0 {
+		return &WinrmError{returnCode, "Cannot add bail in dhcp server.", stderr}
+	}
+
+	return nil
+}
+
+func (c *Communicator) RemoveBail(mac string, scope net.IP) error {
+
+	command := fmt.Sprintf(
+		"Remove-DhcpServerv4Reservation -ScopeId %s -ClientId \"%s\"",
+		scope.String(), mac,
+	)
+
+	c.Execute(command)
+
+	return nil
+
 }
 
 func (c *Communicator) Execute(command string) (string, string, int) {

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"log"
 	"net"
-	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -117,8 +116,4 @@ func subGenerate(before string, count int) string {
 	sub, _ := randomHex(1)
 	new := before + ":" + sub
 	return subGenerate(new, count-1)
-}
-
-func NormalizeMacWindows(mac string) string {
-	return strings.ToUpper(strings.Replace(mac, ":", "-", -1))
 }

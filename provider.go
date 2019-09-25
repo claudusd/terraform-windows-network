@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/masterzen/winrm"
 )
@@ -38,6 +40,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"win_mac_allow": resourceMacAllow(),
+			"win_dhcp_bail": resourceBail(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
@@ -58,4 +61,8 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	return communicator, nil
+}
+
+func NormalizeMacWindows(mac string) string {
+	return strings.ToUpper(strings.Replace(mac, ":", "-", -1))
 }
