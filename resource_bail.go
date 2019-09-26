@@ -21,9 +21,14 @@ func resourceBail() *schema.Resource {
 			},
 			"ip": &schema.Schema{
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "",
 			},
 			"description": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"scope_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -38,30 +43,32 @@ func createBail(d *schema.ResourceData, m interface{}) error {
 		return errors.New("Invalid mac Address")
 	}
 
-	ipv4, ipv4Net, err := net.ParseCIDR(d.Get("ip").(string))
-
-	if err != nil {
-		return errors.New("Invalid ip address, should be in CIDR address")
-	}
-
 	c := m.(*Communicator)
 	c.Connect()
 
-	c.AddBail(NormalizeMacWindows(mac.String()), ipv4, ipv4Net.IP, d.Get("description").(string))
+	if d.Get("ip").(string) == "" {
+		ip, err := c.getFreeIp(d.Get("scope_id").(string))
+		if err != nil {
+			return err
+		}
+		d.Set("ip", ip)
+	}
+
+	ipv4 := net.ParseIP(d.Get("ip").(string))
+
+	if ipv4 == nil {
+		return errors.New("Invalid ip Address")
+	}
+
+	c.AddBail(NormalizeMacWindows(mac.String()), ipv4, d.Get("scope_id").(string), d.Get("description").(string))
 	d.SetId(mac.String() + "_" + ipv4.String())
 	return nil
 }
 
 func deleteBail(d *schema.ResourceData, m interface{}) error {
-	_, ipv4Net, err := net.ParseCIDR(d.Get("ip").(string))
-
-	if err != nil {
-		return errors.New("Invalid ip address, should be in CIDR address")
-	}
-
 	c := m.(*Communicator)
 	c.Connect()
-	return c.RemoveBail(NormalizeMacWindows(d.Get("mac").(string)), ipv4Net.IP)
+	return c.RemoveBail(NormalizeMacWindows(d.Get("mac").(string)), d.Get("description").(string))
 }
 
 func readBail(d *schema.ResourceData, m interface{}) error {
