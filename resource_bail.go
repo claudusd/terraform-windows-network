@@ -22,7 +22,8 @@ func resourceBail() *schema.Resource {
 			"ip": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
+				Default:  nil,
+				Computed: true,
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
