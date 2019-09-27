@@ -87,11 +87,11 @@ func (c *Communicator) GetAllAllowedMacAddress() []string {
 	return macs
 }
 
-func (c *Communicator) AddBail(mac string, ip net.IP, scopeId string, description string) error {
+func (c *Communicator) AddBail(mac string, ip net.IP, scopeId string, description string, name string) error {
 
 	command := fmt.Sprintf(
 		"Add-DhcpServerv4Reservation -ScopeId %s -Description \"%s\" -IPAddress %s -Name %s -ClientId %s -Type Dhcp",
-		scopeId, "Toto bail", ip.String(), "terraform-bail", mac,
+		scopeId, description, ip.String(), name, mac,
 	)
 
 	_, stderr, returnCode := c.Execute(command)
@@ -122,12 +122,12 @@ func (c *Communicator) getFreeIp(scopeId string) (net.IP, error) {
 	)
 
 	ip, stderr, exitCode := c.Execute(command)
-
 	if exitCode != 0 {
 		return nil, &WinrmError{exitCode, "Cannot get a free ip.", stderr}
 	}
-
-	return net.ParseIP(ip), nil
+	ipv4 := net.ParseIP(strings.TrimSpace(ip))
+	log.Printf("[DEBUG] free ip for scope " + scopeId + " is " + ipv4.String())
+	return ipv4, nil
 }
 
 func (c *Communicator) Execute(command string) (string, string, int) {

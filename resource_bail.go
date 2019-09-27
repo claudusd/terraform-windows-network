@@ -32,6 +32,10 @@ func resourceBail() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"name": &schema.Schema{
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
@@ -51,16 +55,15 @@ func createBail(d *schema.ResourceData, m interface{}) error {
 		if err != nil {
 			return err
 		}
-		d.Set("ip", ip)
+		d.Set("ip", ip.String())
 	}
 
 	ipv4 := net.ParseIP(d.Get("ip").(string))
-
 	if ipv4 == nil {
 		return errors.New("Invalid ip Address")
 	}
 
-	c.AddBail(NormalizeMacWindows(mac.String()), ipv4, d.Get("scope_id").(string), d.Get("description").(string))
+	c.AddBail(NormalizeMacWindows(mac.String()), ipv4, d.Get("scope_id").(string), d.Get("description").(string), d.Get("name").(string))
 	d.SetId(mac.String() + "_" + ipv4.String())
 	return nil
 }
@@ -68,7 +71,7 @@ func createBail(d *schema.ResourceData, m interface{}) error {
 func deleteBail(d *schema.ResourceData, m interface{}) error {
 	c := m.(*Communicator)
 	c.Connect()
-	return c.RemoveBail(NormalizeMacWindows(d.Get("mac").(string)), d.Get("description").(string))
+	return c.RemoveBail(NormalizeMacWindows(d.Get("mac").(string)), d.Get("scope_id").(string))
 }
 
 func readBail(d *schema.ResourceData, m interface{}) error {

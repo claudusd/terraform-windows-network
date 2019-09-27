@@ -23,7 +23,8 @@ func resourceMacAllow() *schema.Resource {
 			"mac": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "",
+				Default:  nil,
+				Computed: true,
 			},
 			"description": &schema.Schema{
 				Type:     schema.TypeString,
@@ -43,21 +44,20 @@ func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
 	c.Connect()
 
 	var mac net.HardwareAddr
-
-	if d.Get("mac") == "" {
+	if d.Get("mac").(string) == "" {
 		log.Printf("[DEBUG] generate a mac address")
 		mac = GenerateMac(c.GetAllAllowedMacAddress())
+		d.Set("mac", mac.String())
+		log.Println("[DEBUG] Generated mac" + mac.String())
 	}
 
 	var err error
 
-	if d.Get("mac") != "" {
-		log.Printf("[DEBUG] validate a mac address")
-		mac, err = net.ParseMAC(d.Get("mac").(string))
-		if err != nil {
-			log.Printf("[DEBUG] invalid mac address")
-			return errors.New("Invalid mac Address")
-		}
+	log.Printf("[DEBUG] validate a mac address")
+	mac, err = net.ParseMAC(d.Get("mac").(string))
+	if err != nil {
+		log.Printf("[DEBUG] invalid mac address")
+		return errors.New("Invalid mac Address")
 	}
 
 	d.Set("mac_windows", NormalizeMacWindows(mac.String()))
