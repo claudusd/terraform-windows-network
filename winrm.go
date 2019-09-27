@@ -130,6 +130,32 @@ func (c *Communicator) getFreeIp(scopeId string) (net.IP, error) {
 	return ipv4, nil
 }
 
+func (c *Communicator) AddDNSRecordA(zone string, ip net.IP, name string) error {
+	command := fmt.Sprintf(
+		"Add-dnsserverresourcerecordA -name \"%s\" -zonename \"%s\" -allowupdateany -ipv4address \"%s\"",
+		name, zone, ip.String(),
+	)
+
+	_, stderr, exitCode := c.Execute(command)
+
+	if exitCode != 0 {
+		return &WinrmError{exitCode, "Cannot add record A.", stderr}
+	}
+
+	return nil
+}
+
+func (c *Communicator) RemoveDNSRecordA(zone string, ip net.IP, name string) error {
+	command := fmt.Sprintf(
+		"Remove-DnsServerResourceRecord -zonename \"%s\" -RRType A -Name \"%s\" -RecordData \"%s\" -Force",
+		zone, name, ip.String(),
+	)
+
+	c.Execute(command)
+
+	return nil
+}
+
 func (c *Communicator) Execute(command string) (string, string, int) {
 	stdout, stderr, returnCode, _ := c.client.RunWithString(winrm.Powershell(command), "")
 	log.Printf(stdout)
