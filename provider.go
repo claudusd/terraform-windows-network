@@ -39,8 +39,9 @@ func Provider() *schema.Provider {
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"win_mac_allow": resourceMacAllow(),
-			"win_dhcp_bail": resourceBail(),
+			"win_mac_allow":    resourceMacAllow(),
+			"win_dhcp_bail":    resourceBail(),
+			"win_dns_record_a": resourceRecordA(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
