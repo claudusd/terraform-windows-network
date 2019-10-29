@@ -7,12 +7,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func resourceBail() *schema.Resource {
+func resourceDHCPReservation() *schema.Resource {
 	return &schema.Resource{
-		Create: createBail,
-		Delete: deleteBail,
-		Read:   readBail,
-		Update: updateBail,
+		Create: CreateDHCPReservation,
+		Delete: DeleteDHCPReservation,
+		Read:   ReadDHCPReservation,
+		Update: UpdateDHCPReservation,
 
 		Schema: map[string]*schema.Schema{
 			"mac": &schema.Schema{
@@ -41,7 +41,7 @@ func resourceBail() *schema.Resource {
 	}
 }
 
-func createBail(d *schema.ResourceData, m interface{}) error {
+func CreateDHCPReservation(d *schema.ResourceData, m interface{}) error {
 
 	mac, err := net.ParseMAC(d.Get("mac").(string))
 	if err != nil {
@@ -52,7 +52,7 @@ func createBail(d *schema.ResourceData, m interface{}) error {
 	c.Connect()
 
 	if d.Get("ip").(string) == "" {
-		ip, err := c.getFreeIp(d.Get("scope_id").(string))
+		ip, err := c.GetFreeIp(d.Get("scope_id").(string))
 		if err != nil {
 			return err
 		}
@@ -64,21 +64,21 @@ func createBail(d *schema.ResourceData, m interface{}) error {
 		return errors.New("Invalid ip Address")
 	}
 
-	c.AddBail(NormalizeMacWindows(mac.String()), ipv4, d.Get("scope_id").(string), d.Get("description").(string), d.Get("name").(string))
+	c.AddDHCPReservation(NormalizeMacWindows(mac.String()), ipv4, d.Get("scope_id").(string), d.Get("description").(string), d.Get("name").(string))
 	d.SetId(mac.String() + "_" + ipv4.String())
 	return nil
 }
 
-func deleteBail(d *schema.ResourceData, m interface{}) error {
+func DeleteDHCPReservation(d *schema.ResourceData, m interface{}) error {
 	c := m.(*Communicator)
 	c.Connect()
-	return c.RemoveBail(NormalizeMacWindows(d.Get("mac").(string)), d.Get("scope_id").(string))
+	return c.RemoveDHCPReservation(NormalizeMacWindows(d.Get("mac").(string)), d.Get("scope_id").(string))
 }
 
-func readBail(d *schema.ResourceData, m interface{}) error {
+func ReadDHCPReservation(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func updateBail(d *schema.ResourceData, m interface{}) error {
+func UpdateDHCPReservation(d *schema.ResourceData, m interface{}) error {
 	return nil
 }

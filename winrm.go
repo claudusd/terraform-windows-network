@@ -90,7 +90,7 @@ func (c *Communicator) GetAllAllowedMacAddress() []string {
 	return macs
 }
 
-func (c *Communicator) AddBail(mac string, ip net.IP, scopeId string, description string, name string) error {
+func (c *Communicator) AddDHCPReservation(mac string, ip net.IP, scopeId string, description string, name string) error {
 
 	command := fmt.Sprintf(
 		"Add-DhcpServerv4Reservation -ScopeId %s -Description \"%s\" -IPAddress %s -Name %s -ClientId %s -Type Dhcp",
@@ -100,13 +100,13 @@ func (c *Communicator) AddBail(mac string, ip net.IP, scopeId string, descriptio
 	_, stderr, returnCode := c.Execute(command)
 
 	if returnCode != 0 {
-		return &WinrmError{returnCode, "Cannot add bail in dhcp server.", stderr}
+		return &WinrmError{returnCode, "Cannot add reservation in dhcp server.", stderr}
 	}
 
 	return nil
 }
 
-func (c *Communicator) RemoveBail(mac string, scopeId string) error {
+func (c *Communicator) RemoveDHCPReservation(mac string, scopeId string) error {
 
 	command := fmt.Sprintf(
 		"Remove-DhcpServerv4Reservation -ScopeId %s -ClientId \"%s\"",
@@ -118,7 +118,7 @@ func (c *Communicator) RemoveBail(mac string, scopeId string) error {
 	return nil
 }
 
-func (c *Communicator) getFreeIp(scopeId string) (net.IP, error) {
+func (c *Communicator) GetFreeIp(scopeId string) (net.IP, error) {
 	command := fmt.Sprintf(
 		"Get-DhcpServerv4FreeIPAddress -ScopeId %s -NumAddress 1024",
 		scopeId,
