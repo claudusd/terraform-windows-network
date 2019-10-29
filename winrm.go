@@ -1,11 +1,14 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/masterzen/winrm"
 )
@@ -117,15 +120,33 @@ func (c *Communicator) RemoveBail(mac string, scopeId string) error {
 
 func (c *Communicator) getFreeIp(scopeId string) (net.IP, error) {
 	command := fmt.Sprintf(
-		"Get-DhcpServerv4FreeIPAddress -ScopeId %s",
+		"Get-DhcpServerv4FreeIPAddress -ScopeId %s -NumAddress 1024",
 		scopeId,
 	)
 
-	ip, stderr, exitCode := c.Execute(command)
+	stdout, stderr, exitCode := c.Execute(command)
+
 	if exitCode != 0 {
 		return nil, &WinrmError{exitCode, "Cannot get a free ip.", stderr}
 	}
-	ipv4 := net.ParseIP(strings.TrimSpace(ip))
+
+	ips := strings.Split(stdout, "\n")
+
+	if len(ips) == 0 {
+		return nil, errors.New("No ip available in dhcp")
+	}
+
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(ips), func(i, j int) { ips[i], ips[j] = ips[j], ips[i] })
+
+	ipv4String := strings.TrimSpace(ips[0])
+
+	ipv4 := net.ParseIP(ipv4String)
+
+	if ipv4 == nil {
+		return nil, errors.New("Canot parse ip " + ipv4String)
+	}
+
 	log.Printf("[DEBUG] free ip for scope " + scopeId + " is " + ipv4.String())
 	return ipv4, nil
 }
@@ -158,7 +179,5 @@ func (c *Communicator) RemoveDNSRecordA(zone string, ip net.IP, name string) err
 
 func (c *Communicator) Execute(command string) (string, string, int) {
 	stdout, stderr, returnCode, _ := c.client.RunWithString(winrm.Powershell(command), "")
-	log.Printf(stdout)
-	log.Printf(stderr)
 	return stdout, stderr, returnCode
 }
