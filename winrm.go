@@ -118,13 +118,15 @@ func (c *Communicator) RemoveDHCPReservation(mac string, scopeId string) error {
 	return nil
 }
 
-func (c *Communicator) RemoveDHCPLease(scopeId string, mac string, ip string)  {
-	command != fmt.Sprintf(
+func (c *Communicator) RemoveDHCPLease(scopeId string, mac string, ip string) error {
+	command := fmt.Sprintf(
 		"Remove-DhcpServerv4Lease -ScopeId %s -ClientId \"%s\" -IPAddress %s",
-		scopeId, mac, ip
+		scopeId, mac, ip,
 	)
 
 	c.Execute(command)
+
+	return nil
 }
 
 func (c *Communicator) GetFreeIp(scopeId string) (net.IP, error) {
