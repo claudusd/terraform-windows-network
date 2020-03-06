@@ -4,7 +4,7 @@ This provider use winrm to create dhcp reservation, mac filter and dns record fo
 
 ## Usage
 
- ``` json
+ ``` hcl
 provider "windowsnetwork" {
     host = "192.168.100.155"
     port = "5986"
@@ -24,7 +24,7 @@ provider "windowsnetwork" {
 | description | Yes           | Description of reservation |
 | mac_windows | No            | This is the mac address in a format accepted by windows dhcp |
 
-``` json
+``` hcl
 resource "windowsnetwork_dhcp_mac_allowed" "a_mac" {
     mac = "2A-F8-AF-19-FD-B2"
     ip "192.168.165.5"
@@ -41,7 +41,7 @@ resource "windowsnetwork_dhcp_mac_allowed" "a_mac" {
 | scope_id    | Yes      | The dhcp's scope id |
 | name        | Yes      | The reservation name |
 
-``` json
+``` hcl
 // Create a reservation with an ip
 resource "windowsnetwork_dhcp_reservation" "reservation_with_ip" {
     mac = "2A-F8-AF-19-FD-B2"
@@ -60,6 +60,8 @@ resource "windowsnetwork_dhcp_reservation" "reservation_without_ip" {
 }
 ```
 
+When this resource is destroy the reservation and the lease are remove.
+
 ### windowsnetwork_dns_record_a
 
 |  Argument | Required | Definition |
@@ -69,7 +71,7 @@ resource "windowsnetwork_dhcp_reservation" "reservation_without_ip" {
 | zone      | Yes      | The record's zone |
 
 
-``` json
+``` hcl
 resource "windowsnetwork_dns_record_a" "www" {
     name = "www"
     zone = "example.com"
