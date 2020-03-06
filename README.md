@@ -60,6 +60,8 @@ resource "windowsnetwork_dhcp_reservation" "reservation_without_ip" {
 }
 ```
 
+When this resource is destroy the reservation and the lease are remove.
+
 ### windowsnetwork_dns_record_a
 
 |  Argument | Required | Definition |

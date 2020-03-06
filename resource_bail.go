@@ -72,7 +72,9 @@ func CreateDHCPReservation(d *schema.ResourceData, m interface{}) error {
 func DeleteDHCPReservation(d *schema.ResourceData, m interface{}) error {
 	c := m.(*Communicator)
 	c.Connect()
-	return c.RemoveDHCPReservation(NormalizeMacWindows(d.Get("mac").(string)), d.Get("scope_id").(string))
+	c.RemoveDHCPReservation(NormalizeMacWindows(d.Get("mac").(string)), d.Get("scope_id").(string))
+	c.RemoveDHCPLease(d.Get("scope_id").(string), d.Get("mac").(string), d.Get("ip").(string))
+	return nil
 }
 
 func ReadDHCPReservation(d *schema.ResourceData, m interface{}) error {
