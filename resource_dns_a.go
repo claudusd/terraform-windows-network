@@ -73,7 +73,7 @@ func createRecordA(d *schema.ResourceData, m interface{}) error {
 func computePtrAndLastByte(ptr string, ip net.IP) ([]string, []string) {
 	ptrArr := strings.Split(ptr, ".")
 	ipArr := strings.Split(ip.String(), ".")
-	lastByteArr := make([]string, 0)
+	lastByteArr := make([]string, 1)
 	if len(ptrArr) == 3 {
 		lastByteArr[0] = ipArr[3]
 	}
