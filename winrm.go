@@ -164,7 +164,7 @@ func (c *Communicator) GetFreeIp(scopeId string) (net.IP, error) {
 
 func (c *Communicator) AddDNSRecordA(zone string, ip net.IP, name string) error {
 	command := fmt.Sprintf(
-		"Add-dnsserverresourcerecordA -name \"%s\" -zonename \"%s\" -allowupdateany -ipv4address \"%s\"",
+		"Add-DnsServerResourceRecordA -name \"%s\" -zonename \"%s\" -allowupdateany -ipv4address \"%s\"",
 		name, zone, ip.String(),
 	)
 
@@ -177,6 +177,39 @@ func (c *Communicator) AddDNSRecordA(zone string, ip net.IP, name string) error 
 	return nil
 }
 
+func (c *Communicator) AddDNSRecordPTR(zone string, ip net.IP, name string, ptrArr []string, lastByteArr []string) error {
+	
+	ptrdomainname := name + "." + zone
+
+	for i, j := 0, len(ptrArr)-1; i < j; i, j = i+1, j-1 {
+		ptrArr[i], ptrArr[j] = ptrArr[j], ptrArr[i]
+	}
+
+	for i, j := 0, len(lastByteArr)-1; i < j; i, j = i+1, j-1 {
+		lastByteArr[i], lastByteArr[j] = lastByteArr[j], lastByteArr[i]
+	}
+
+	lastByte := strings.Join(lastByteArr,".")
+
+	zonename := strings.Join(ptrArr,".") + ".in-addr.arpa"
+
+	command := fmt.Sprintf(
+		"Add-DnsServerResourceRecordPtr -name \"%s\" -zonename \"%s\" -allowupdateany -AgeRecord -PtrDomainName \"%s\"",
+		lastByte, zonename, ptrdomainname,
+	)
+
+	_, stderr, exitCode := c.Execute(command)
+
+	log.Printf("generated command for Add PTR: " + command)
+	log.Printf(stderr)
+
+	if exitCode != 0 {
+		return &WinrmError{exitCode, "Cannot add record PTR.", stderr}
+	}
+	
+	return nil
+}
+
 func (c *Communicator) RemoveDNSRecordA(zone string, ip net.IP, name string) error {
 	command := fmt.Sprintf(
 		"Remove-DnsServerResourceRecord -zonename \"%s\" -RRType A -Name \"%s\" -RecordData \"%s\" -Force",
@@ -184,6 +217,33 @@ func (c *Communicator) RemoveDNSRecordA(zone string, ip net.IP, name string) err
 	)
 
 	c.Execute(command)
+
+	return nil
+}
+
+func (c *Communicator) RemoveDNSRecordPTR(ptrArr []string, lastByteArr []string) error {
+	
+	for i, j := 0, len(ptrArr)-1; i < j; i, j = i+1, j-1 {
+		ptrArr[i], ptrArr[j] = ptrArr[j], ptrArr[i]
+	}
+
+	for i, j := 0, len(lastByteArr)-1; i < j; i, j = i+1, j-1 {
+		lastByteArr[i], lastByteArr[j] = lastByteArr[j], lastByteArr[i]
+	}
+
+	name := strings.Join(lastByteArr,".")
+
+	zonename := strings.Join(ptrArr,".") + ".in-addr.arpa"
+
+	command := fmt.Sprintf(
+		"Remove-DnsServerResourceRecord -zonename \"%s\" -RRType Ptr -Name \"%s\" -Force",
+		zonename, name,
+	)
+
+	_, stderr, _ := c.Execute(command)
+
+	log.Printf("generated command for Remove PTR: " + command)
+	log.Printf(stderr)
 
 	return nil
 }
