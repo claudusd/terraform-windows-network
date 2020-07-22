@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -28,6 +29,10 @@ func resourceRecordA() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"ptr": &schema.Schema{
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -49,9 +54,33 @@ func createRecordA(d *schema.ResourceData, m interface{}) error {
 
 	err := c.AddDNSRecordA(zone, ip, name)
 
-	d.SetId("A_z:" + zone + "_n:" + name + "_ip:" + ip.String())
+	if err != nil {
+		return err
+	}
+
+	d.SetId("A_z:" + zone + "_n:" + name + "_ip:" + ip.String())	
+
+	ptr := d.Get("ptr").(string)
+
+	if ptr != "" {
+		ptrArr, lastByteArr := computePtrAndLastByte(ptr, ip)	
+		err = c.AddDNSRecordPTR(zone, ip, name, ptrArr, lastByteArr)
+	}	
 
 	return err
+}
+
+func computePtrAndLastByte(ptr string, ip net.IP) ([]string, []string) {
+	ptrArr := strings.Split(ptr, ".")
+	ipArr := strings.Split(ip.String(), ".")
+	lastByteArr := make([]string, 1)
+	if len(ptrArr) == 3 {
+		lastByteArr[0] = ipArr[3]
+	}
+	if len(ptrArr) == 2 {
+		lastByteArr = ipArr[2:4]
+	}
+	return ptrArr, lastByteArr
 }
 
 func deleteRecordA(d *schema.ResourceData, m interface{}) error {
@@ -59,6 +88,16 @@ func deleteRecordA(d *schema.ResourceData, m interface{}) error {
 	c.Connect()
 
 	ip := net.ParseIP(d.Get("ip").(string))
+
+	ptr := d.Get("ptr").(string)
+
+	if ptr != "" {
+		ptrArr, lastByteArr := computePtrAndLastByte(ptr, ip)	
+		err := c.RemoveDNSRecordPTR(ptrArr, lastByteArr)
+		if err != nil {
+			return err
+		}
+	}	
 
 	return c.RemoveDNSRecordA(d.Get("zone").(string), ip, d.Get("name").(string))
 }
