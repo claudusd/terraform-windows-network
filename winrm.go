@@ -48,7 +48,7 @@ func (c *Communicator) Connect() error {
 
 func (c *Communicator) AddFilterAllowAddress(mac string, description string) error {
 	command := fmt.Sprintf(
-		"Add-DhcpServerv4Filter -List Allow -macAddress \"%s\" -Description \"%s\"",
+		"Add-DhcpServerv4Filter -List Allow -macAddress \"%s\" -Description \"%s\" -Force",
 		mac,
 		description,
 	)
@@ -56,7 +56,7 @@ func (c *Communicator) AddFilterAllowAddress(mac string, description string) err
 	_, stderr, returnCode := c.Execute(command)
 
 	if returnCode != 0 {
-		return &WinrmError{returnCode, "Cannot allow mac address in dhcp, maybe already allowed.", stderr}
+		return &WinrmError{returnCode, "Cannot allow mac address in dhcp.", stderr}
 	}
 
 	return nil
