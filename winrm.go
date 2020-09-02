@@ -93,7 +93,7 @@ func (c *Communicator) GetAllAllowedMacAddress() []string {
 func (c *Communicator) AddDHCPReservation(mac string, ip net.IP, scopeId string, description string, name string) error {
 
 	command := fmt.Sprintf(
-		"Add-DhcpServerv4Reservation -ScopeId %s -Description \"%s\" -IPAddress %s -Name %s -ClientId %s -Type Dhcp",
+		"Add-DhcpServerv4Reservation -ScopeId %s -Description \"%s\" -IPAddress %s -Name \"%s\" -ClientId %s -Type Dhcp",
 		scopeId, description, ip.String(), name, mac,
 	)
 
